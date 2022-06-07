@@ -84,7 +84,7 @@ function runQuery(query, connection) {
           }
           delete row[''];
         }
-        if (rows.length < maxRows) {
+        if (rows.length < maxRows || query === SCHEMA_SQL) {
           return rows.push(row);
         }
         // If reached it means we received a row event for more than maxRows
