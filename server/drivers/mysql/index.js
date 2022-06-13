@@ -153,17 +153,16 @@ class Client {
     );
     const maxRowsPlusOne = maxRows + 1;
 
-    let limitedQuery;
+    let limitedQuery = query;
 
-    if (isSchema) {
-      limitedQuery = query;
-    } else {
+    if (!isSchema) {
       limitedQuery = sqlLimiter.limit(
         query,
         ['limit', 'fetch'],
         maxRowsPlusOne
       );
     }
+
     return new Promise((resolve, reject) => {
       // TODO - use fields from driver to return columns
       // eslint-disable-next-line no-unused-vars
@@ -171,7 +170,7 @@ class Client {
         if (error) {
           return reject(error);
         }
-        if (rows.length >= maxRowsPlusOne) {
+        if (!isSchema && rows.length >= maxRowsPlusOne) {
           return resolve({ rows: rows.slice(0, maxRows), incomplete: true });
         }
         return resolve({ rows, incomplete: false });

@@ -160,7 +160,6 @@ class Client {
 
     if (!isSchema && strategies.length) {
       cleanedQuery = sqlLimiter.limit(query, strategies, maxRows + 1);
-      cleanedQuery = query;
     }
 
     try {
@@ -186,7 +185,7 @@ class Client {
       if (columns && columns.length > 0) {
         // iterate over queryResult, which is also an array of rows
         for (const row of queryResult) {
-          if (maxRows) {
+          if (!isSchema && maxRows) {
             if (rows.length < maxRows) {
               rows.push(row);
             } else {
