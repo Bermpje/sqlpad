@@ -158,10 +158,9 @@ class Client {
     let cleanedQuery = query;
     const strategies = cleanAndValidateLimitStrategies(limit_strategies);
 
-    if (isSchema) {
-      cleanedQuery = query;
-    } else if (strategies.length) {
+    if (!isSchema && strategies.length) {
       cleanedQuery = sqlLimiter.limit(query, strategies, maxRows + 1);
+      cleanedQuery = query;
     }
 
     try {
