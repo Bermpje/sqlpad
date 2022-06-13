@@ -58,11 +58,11 @@ function cleanAndValidateLimitStrategies(limitStrategies) {
  * @param {object} connection
  */
 
-async function runQuery(query, connection) {
+async function runQuery(query, connection, isSchema=false) {
   const client = new Client(connection);
   await client.connect();
   try {
-    const result = await client.runQuery(query);
+    const result = await client.runQuery(query, isSchema);
     await client.disconnect();
     return result;
   } catch (error) {
@@ -89,7 +89,7 @@ function getSchema(connection) {
   const schema_sql = connection.schema_sql
     ? connection.schema_sql
     : SCHEMA_SQL_INFORMATION_SCHEMA;
-  return runQuery(schema_sql, connection).then((queryResult) =>
+  return runQuery(schema_sql, connection, true).then((queryResult) =>
     formatSchemaQueryResults(queryResult)
   );
 }
@@ -146,7 +146,7 @@ class Client {
     this.client = null;
   }
 
-  async runQuery(query) {
+  async runQuery(query, isSchema) {
     const { limit_strategies } = this.connection;
 
     // Check to see if a custom maxrows is set, otherwise use default
@@ -158,7 +158,9 @@ class Client {
     let cleanedQuery = query;
     const strategies = cleanAndValidateLimitStrategies(limit_strategies);
 
-    if (strategies.length) {
+    if (isSchema) {
+      cleanedQuery = query;
+    } else if (strategies.length) {
       cleanedQuery = sqlLimiter.limit(query, strategies, maxRows + 1);
     }
 
