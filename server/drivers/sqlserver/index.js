@@ -28,7 +28,7 @@ const SCHEMA_SQL = `
  * @param {string} query
  * @param {object} connection
  */
-function runQuery(query, connection) {
+function runQuery(query, connection, isSchema = false) {
   const config = {
     user: connection.username,
     password: connection.password,
@@ -84,7 +84,7 @@ function runQuery(query, connection) {
           }
           delete row[''];
         }
-        if (rows.length < maxRows) {
+        if (rows.length < maxRows || isSchema) {
           return rows.push(row);
         }
         // If reached it means we received a row event for more than maxRows
@@ -132,7 +132,7 @@ function testConnection(connection) {
  * @param {*} connection
  */
 function getSchema(connection) {
-  return runQuery(SCHEMA_SQL, connection).then((queryResult) =>
+  return runQuery(SCHEMA_SQL, connection, true).then((queryResult) =>
     formatSchemaQueryResults(queryResult)
   );
 }

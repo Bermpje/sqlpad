@@ -126,24 +126,21 @@ class Client {
     );
     const maxRowsPlusOne = maxRows + 1;
 
-    let limitedQuery
+    let limitedQuery = query;
 
-    if (isSchema) {
-      limitedQuery = query;
-    } else {
-
-    limitedQuery = sqlLimiter.limit(
-      query,
-      ['limit', 'fetch'],
-      maxRowsPlusOne
-    );
+    if (!isSchema) {
+      limitedQuery = sqlLimiter.limit(
+        query,
+        ['limit', 'fetch'],
+        maxRowsPlusOne
+      );
     }
 
     // TODO - use fields from driver to return columns
     // eslint-disable-next-line no-unused-vars
     const [rows, fields] = await this.client.query(limitedQuery);
 
-    if (rows.length >= maxRowsPlusOne) {
+    if (!isSchema && rows.length >= maxRowsPlusOne) {
       return { rows: rows.slice(0, maxRows), incomplete: true };
     }
     return { rows, incomplete: false };

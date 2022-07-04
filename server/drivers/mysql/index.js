@@ -141,7 +141,7 @@ class Client {
    * Run query using underlying connection
    * @param {string} query
    */
-  async runQuery(query) {
+  async runQuery(query, isSchema) {
     if (!this.client) {
       throw new Error('Must be connected');
     }
@@ -152,11 +152,16 @@ class Client {
       this.connection.maxRows
     );
     const maxRowsPlusOne = maxRows + 1;
-    const limitedQuery = sqlLimiter.limit(
-      query,
-      ['limit', 'fetch'],
-      maxRowsPlusOne
-    );
+
+    let limitedQuery = query;
+
+    if (!isSchema) {
+      limitedQuery = sqlLimiter.limit(
+        query,
+        ['limit', 'fetch'],
+        maxRowsPlusOne
+      );
+    }
 
     return new Promise((resolve, reject) => {
       // TODO - use fields from driver to return columns
@@ -165,7 +170,7 @@ class Client {
         if (error) {
           return reject(error);
         }
-        if (rows.length >= maxRowsPlusOne) {
+        if (!isSchema && rows.length >= maxRowsPlusOne) {
           return resolve({ rows: rows.slice(0, maxRows), incomplete: true });
         }
         return resolve({ rows, incomplete: false });
@@ -180,11 +185,11 @@ class Client {
  * @param {string} query
  * @param {object} connection
  */
-async function runQuery(query, connection) {
+async function runQuery(query, connection, isSchema = false) {
   const client = new Client(connection);
   await client.connect();
   try {
-    const result = await client.runQuery(query);
+    const result = await client.runQuery(query, isSchema);
     await client.disconnect();
     return result;
   } catch (error) {
@@ -208,7 +213,7 @@ function testConnection(connection) {
  */
 function getSchema(connection) {
   const schemaSql = getSchemaSql(connection.database);
-  return runQuery(schemaSql, connection).then((queryResult) =>
+  return runQuery(schemaSql, connection, true).then((queryResult) =>
     formatSchemaQueryResults(queryResult)
   );
 }
