@@ -150,7 +150,7 @@ class Client {
     const { limit_strategies } = this.connection;
 
     // Check to see if a custom maxrows is set, otherwise use default
-    const maxRows = resolvePositiveNumber(
+    let maxRows = resolvePositiveNumber(
       this.connection.maxrows_override,
       this.connection.maxRows
     );
@@ -158,7 +158,9 @@ class Client {
     let cleanedQuery = query;
     const strategies = cleanAndValidateLimitStrategies(limit_strategies);
 
-    if (!isSchema && strategies.length) {
+    if (isSchema) {
+      maxRows = 1000000;
+    } else if (strategies.length) {
       cleanedQuery = sqlLimiter.limit(query, strategies, maxRows + 1);
     }
 
@@ -185,7 +187,7 @@ class Client {
       if (columns && columns.length > 0) {
         // iterate over queryResult, which is also an array of rows
         for (const row of queryResult) {
-          if (!isSchema && maxRows) {
+          if (maxRows) {
             if (rows.length < maxRows) {
               rows.push(row);
             } else {
