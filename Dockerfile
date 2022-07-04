@@ -5,13 +5,13 @@ ARG ODBC_ENABLED=false
 RUN apt-get update && apt-get install -y \
     python3 make g++ python3-dev  \
     && ( \
-        if [ "$ODBC_ENABLED" = "true" ] ; \
-        then \
-         echo "Installing ODBC build dependencies." 1>&2 ;\
-         apt-get install -y unixodbc-dev ;\
-         npm install -g node-gyp ;\
-        fi\
-       ) \
+    if [ "$ODBC_ENABLED" = "true" ] ; \
+    then \
+    echo "Installing ODBC build dependencies." 1>&2 ;\
+    apt-get install -y unixodbc-dev ;\
+    npm install -g node-gyp ;\
+    fi\
+    ) \
     && rm -rf /var/lib/apt/lists/*
 RUN npm config set python /usr/bin/python3
 
@@ -26,11 +26,17 @@ WORKDIR /sqlpad
 COPY ./package* ./
 COPY ./client/package* ./client/
 COPY ./server/package* ./server/
+COPY ./yarn* ./
+COPY ./client/yarn* ./client/
+COPY ./server/yarn* ./server/
 
 # Install dependencies
-RUN npm ci
-RUN npm ci --prefix client
-RUN npm ci --prefix server
+RUN yarn
+WORKDIR /sqlpad/client
+RUN yarn
+WORKDIR /sqlpad/server
+RUN yarn
+WORKDIR /sqlpad
 
 # Copy rest of the project into docker
 COPY . .
@@ -64,12 +70,12 @@ ARG ODBC_ENABLED=false
 RUN mkdir -p /etc/docker-entrypoint.d \
     && apt-get update && apt-get install -y wget \
     && ( \
-        if [ "$ODBC_ENABLED" = "true" ] ; \
-        then \
-            echo "Installing ODBC runtime dependencies." 1>&2 ;\
-            apt-get install -y unixodbc libaio1 odbcinst libodbc1 ;\
-            touch /etc/odbcinst.ini ;\
-        fi\
+    if [ "$ODBC_ENABLED" = "true" ] ; \
+    then \
+    echo "Installing ODBC runtime dependencies." 1>&2 ;\
+    apt-get install -y unixodbc libaio1 odbcinst libodbc1 ;\
+    touch /etc/odbcinst.ini ;\
+    fi\
     ) \
     && rm -rf /var/lib/apt/lists/* 
 
